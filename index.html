@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Detection</title>
+</head>
+<body>
+    <h1>Object Detection</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" accept="image/*">
+        <button type="submit">Upload Image</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData();
+            formData.append('file', document.getElementById('fileInput').files[0]);
+
+            fetch('/api/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the results
+                var resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+                var img = document.createElement('img');
+                img.src = data.data.image;
+                resultsDiv.appendChild(img);
+                var classCount = data.data.Class;
+                var percentages = data.data.Percentage;
+                var indexDt = data.data.index_dt;
+                resultsDiv.innerHTML += '<h2>Class Count: ' + classCount + '</h2>';
+                resultsDiv.innerHTML += '<h2>Class Percentages:</h2>';
+                Object.keys(percentages).forEach(function(key) {
+                    resultsDiv.innerHTML += '<p>' + key + ': ' + percentages[key] + '%</p>';
+                });
+                resultsDiv.innerHTML += '<h2>Annotations:</h2>';
+                indexDt.forEach(function(annotation) {
+                    resultsDiv.innerHTML += '<p>Index: ' + annotation.index + ', Class: ' + annotation.class + ', BBox: ' + annotation.BBox + '</p>';
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
